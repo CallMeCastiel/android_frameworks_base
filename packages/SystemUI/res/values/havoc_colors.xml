@@ -27,4 +27,7 @@
     <!-- Screenrecord -->
     <color name="screenrecord_icon_color">#B71C1C</color>
 
+        <!-- Quicksettings main QS background-->
+    <color name="quick_settings_status_bar_background_color">#ff000000</color>
+
 </resources>
