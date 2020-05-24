@@ -270,4 +270,6 @@
     <!-- Alerting notification header label -->
     <string name="notification_section_header_alerting">Alerting notifications</string>
 
+    <!-- Daily data usage -->
+    <string name="daily_data_usage_title">Today\'s usage</string>
 </resources>
