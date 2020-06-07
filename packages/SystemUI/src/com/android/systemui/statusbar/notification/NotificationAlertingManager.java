@@ -30,6 +30,7 @@ import com.android.systemui.statusbar.NotificationRemoteInputManager;
 import com.android.systemui.statusbar.notification.collection.NotificationEntry;
 import com.android.systemui.statusbar.notification.row.NotificationContentInflater.InflationFlag;
 import com.android.systemui.statusbar.phone.ShadeController;
+import com.android.systemui.statusbar.phone.StatusBar;
 import com.android.systemui.statusbar.policy.HeadsUpManager;
 
 import javax.inject.Inject;
@@ -51,6 +52,9 @@ public class NotificationAlertingManager {
     private final NotificationMediaManager mMediaManager;
 
     private HeadsUpManager mHeadsUpManager;
+
+    // We need reference to status bar for notification ticker
+    private StatusBar mStatusBar;
 
     @Inject
     public NotificationAlertingManager(
@@ -112,8 +116,15 @@ public class NotificationAlertingManager {
                 }
             } else {
                 entry.freeContentViewWhenSafe(FLAG_CONTENT_VIEW_HEADS_UP);
+                if (mStatusBar != null && mStatusBar.mTickerEnabled) {
+                    mStatusBar.tick(entry.notification, true, false, null, null);
+                }
             }
-        }
+        } else {
+            if (mStatusBar != null && mStatusBar.mTickerEnabled) {
+                mStatusBar.tick(entry.notification, true, false, null, null);
+            }
+	}
     }
 
     private void updateAlertState(NotificationEntry entry) {
@@ -171,5 +182,9 @@ public class NotificationAlertingManager {
                             || !mVisualStabilityManager.isReorderingAllowed();
             mHeadsUpManager.removeNotification(key, ignoreEarliestRemovalTime);
         }
+    }
+
+    public void setStatusBar(StatusBar statusBar) {
+        mStatusBar = statusBar;
     }
 }

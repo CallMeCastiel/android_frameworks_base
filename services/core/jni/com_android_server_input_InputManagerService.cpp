@@ -228,6 +228,7 @@ public:
     void reloadPointerIcons();
     void setCustomPointerIcon(const SpriteIcon& icon);
     void setPointerCapture(bool enabled);
+    void setMotionClassifierEnabled(bool enabled);
 
     /* --- InputReaderPolicyInterface implementation --- */
 
@@ -1334,6 +1335,10 @@ int32_t NativeInputManager::getCustomPointerIconId() {
     return POINTER_ICON_STYLE_CUSTOM;
 }
 
+void NativeInputManager::setMotionClassifierEnabled(bool enabled) {
+    mInputManager->setMotionClassifierEnabled(enabled);
+}
+
 // ----------------------------------------------------------------------------
 
 static jlong nativeInit(JNIEnv* env, jclass /* clazz */,
@@ -1593,6 +1598,27 @@ static void nativeSetSystemUiVisibility(JNIEnv* /* env */,
     im->setSystemUiVisibility(visibility);
 }
 
+static jboolean nativeTransferTouchFocus(JNIEnv* env,
+        jclass /* clazz */, jlong ptr, jobject fromChannelObj, jobject toChannelObj) {
+    NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+
+    sp<InputChannel> fromChannel =
+            android_view_InputChannel_getInputChannel(env, fromChannelObj);
+    sp<InputChannel> toChannel =
+            android_view_InputChannel_getInputChannel(env, toChannelObj);
+
+    if (fromChannel == nullptr || toChannel == nullptr) {
+        return JNI_FALSE;
+    }
+
+    if (im->getInputManager()->getDispatcher()->
+            transferTouchFocus(fromChannel->getToken(), toChannel->getToken())) {
+        return JNI_TRUE;
+    } else {
+        return JNI_FALSE;
+    }
+}
+
 static void nativeSetPointerSpeed(JNIEnv* /* env */,
         jclass /* clazz */, jlong ptr, jint speed) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
@@ -1752,6 +1778,14 @@ static jboolean nativeCanDispatchToDisplay(JNIEnv* env, jclass /* clazz */, jlon
     return im->getInputManager()->getReader()->canDispatchToDisplay(deviceId, displayId);
 }
 
+static void nativeSetMotionClassifierEnabled(JNIEnv* /* env */, jclass /* clazz */, jlong ptr,
+                                             jboolean enabled) {
+    NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+
+    im->setMotionClassifierEnabled(enabled);
+}
+
+
 // ----------------------------------------------------------------------------
 
 static const JNINativeMethod gInputManagerMethods[] = {
@@ -1799,6 +1833,8 @@ static const JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeSetInputDispatchMode },
     { "nativeSetSystemUiVisibility", "(JI)V",
             (void*) nativeSetSystemUiVisibility },
+    { "nativeTransferTouchFocus", "(JLandroid/view/InputChannel;Landroid/view/InputChannel;)Z",
+            (void*) nativeTransferTouchFocus },
     { "nativeSetPointerSpeed", "(JI)V",
             (void*) nativeSetPointerSpeed },
     { "nativeSetShowTouches", "(JZ)V",
@@ -1835,6 +1871,8 @@ static const JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeSetCustomPointerIcon },
     { "nativeCanDispatchToDisplay", "(JII)Z",
             (void*) nativeCanDispatchToDisplay },
+    {"nativeSetMotionClassifierEnabled", "(JZ)V",
+            (void*) nativeSetMotionClassifierEnabled},
 };
 
 #define FIND_CLASS(var, className) \

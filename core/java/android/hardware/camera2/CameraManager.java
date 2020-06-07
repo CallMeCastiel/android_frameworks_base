@@ -21,8 +21,8 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
-import android.app.ActivityThread;
 import android.content.Context;
+import android.hardware.Camera;
 import android.hardware.CameraInfo;
 import android.hardware.CameraStatus;
 import android.hardware.ICameraService;
@@ -39,8 +39,6 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.ServiceSpecificException;
 import android.os.SystemProperties;
-import android.text.TextUtils;
-import android.util.Log;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Size;
@@ -704,6 +702,33 @@ public final class CameraManager {
         public void onCameraAccessPrioritiesChanged() {
             // default empty implementation
         }
+
+        /**
+         * A camera device has been opened by an application.
+         *
+         * <p>The default implementation of this method does nothing.</p>
+         *
+         * @param cameraId The unique identifier of the new camera.
+         * @param packageId The package Id of the application opening the camera.
+         *
+         * @see #onCameraClosed
+         */
+        /** @hide */
+        public void onCameraOpened(@NonNull String cameraId, @NonNull String packageId) {
+            // default empty implementation
+        }
+
+        /**
+         * A previously-opened camera has been closed.
+         *
+         * <p>The default implementation of this method does nothing.</p>
+         *
+         * @param cameraId The unique identifier of the closed camera.
+         */
+        /** @hide */
+        public void onCameraClosed(@NonNull String cameraId) {
+            // default empty implementation
+        }
     }
 
     /**
@@ -1009,24 +1034,10 @@ public final class CameraManager {
                 // Try to make sure we have an up-to-date list of camera devices.
                 connectCameraServiceLocked();
 
-                boolean exposeAuxCamera = true;
-                String packageName = ActivityThread.currentOpPackageName();
-                String packageList = SystemProperties.get("vendor.camera.aux.packagelist", "");
-                String packageBlacklist = SystemProperties.get("vendor.camera.aux.packageblacklist", "");
-                if (!packageList.isEmpty()) {
-                    exposeAuxCamera = false;
-                    if (Arrays.asList(packageList.split(",")).contains(packageName)) {
-                        exposeAuxCamera = true;
-                    }
-                } else if (!packageBlacklist.isEmpty()) {
-                    exposeAuxCamera = true;
-                    if (Arrays.asList(packageBlacklist.split(",")).contains(packageName)) {
-                        exposeAuxCamera = false;
-                    }
-                }
+                boolean exposeAuxCamera = Camera.shouldExposeAuxCamera();
                 int idCount = 0;
                 for (int i = 0; i < mDeviceStatus.size(); i++) {
-                    if(!exposeAuxCamera && (i == 2)) break;
+                    if (!exposeAuxCamera && i == 2) break;
                     int status = mDeviceStatus.valueAt(i);
                     if (status == ICameraServiceListener.STATUS_NOT_PRESENT ||
                             status == ICameraServiceListener.STATUS_ENUMERATING) continue;
@@ -1035,7 +1046,7 @@ public final class CameraManager {
                 cameraIds = new String[idCount];
                 idCount = 0;
                 for (int i = 0; i < mDeviceStatus.size(); i++) {
-                    if(!exposeAuxCamera && (i == 2)) break;
+                    if (!exposeAuxCamera && i == 2) break;
                     int status = mDeviceStatus.valueAt(i);
                     if (status == ICameraServiceListener.STATUS_NOT_PRESENT ||
                             status == ICameraServiceListener.STATUS_ENUMERATING) continue;
@@ -1087,19 +1098,7 @@ public final class CameraManager {
                 /* Force to expose only two cameras
                  * if the package name does not falls in this bucket
                  */
-                boolean exposeAuxCamera = false;
-                String packageName = ActivityThread.currentOpPackageName();
-                String packageList = SystemProperties.get("vendor.camera.aux.packagelist");
-                if (packageList.length() > 0) {
-                    TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-                    splitter.setString(packageList);
-                    for (String str : splitter) {
-                        if (packageName.equals(str)) {
-                            exposeAuxCamera = true;
-                            break;
-                        }
-                    }
-                }
+                boolean exposeAuxCamera = Camera.shouldExposeAuxCamera();
                 if (exposeAuxCamera == false && (Integer.parseInt(cameraId) >= 2)) {
                     throw new IllegalArgumentException("invalid cameraId");
                 }
@@ -1172,6 +1171,38 @@ public final class CameraManager {
                         @Override
                         public void run() {
                             callback.onCameraAccessPrioritiesChanged();
+                        }
+                    });
+            } finally {
+                Binder.restoreCallingIdentity(ident);
+            }
+        }
+
+        private void postSingleCameraOpenedUpdate(final AvailabilityCallback callback,
+                final Executor executor, final String id, final String packageId) {
+            final long ident = Binder.clearCallingIdentity();
+            try {
+                executor.execute(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onCameraOpened(id, packageId);
+                        }
+                    });
+            } finally {
+                Binder.restoreCallingIdentity(ident);
+            }
+        }
+
+        private void postSingleCameraClosedUpdate(final AvailabilityCallback callback,
+                final Executor executor, final String id) {
+            final long ident = Binder.clearCallingIdentity();
+            try {
+                executor.execute(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onCameraClosed(id);
                         }
                     });
             } finally {
@@ -1253,30 +1284,9 @@ public final class CameraManager {
         }
 
         private void onStatusChangedLocked(int status, String id) {
-            /* Force to ignore the last mono/aux camera status update
-             * if the package name does not falls in this bucket
-             */
-            boolean exposeMonoCamera = true;
-            String packageName = ActivityThread.currentOpPackageName();
-            String packageList = SystemProperties.get("vendor.camera.aux.packagelist", "");
-            String packageBlacklist = SystemProperties.get("vendor.camera.aux.packageblacklist", "");
-            if (!packageList.isEmpty()) {
-                exposeMonoCamera = false;
-                if (Arrays.asList(packageList.split(",")).contains(packageName)) {
-                    exposeMonoCamera = true;
-                }
-            } else if (!packageBlacklist.isEmpty()) {
-                exposeMonoCamera = true;
-                if (Arrays.asList(packageBlacklist.split(",")).contains(packageName)) {
-                    exposeMonoCamera = false;
-                }
-            }
-
-            if (exposeMonoCamera == false) {
-                if (Integer.parseInt(id) >= 2) {
-                    Log.w(TAG, "[soar.cts] ignore the status update of camera: " + id);
-                    return;
-                }
+            if (!Camera.shouldExposeAuxCamera() && Integer.parseInt(id) >= 2) {
+                Log.w(TAG, "[soar.cts] ignore the status update of camera: " + id);
+                return;
             }
 
             if (DEBUG) {
@@ -1357,25 +1367,10 @@ public final class CameraManager {
             /* Force to ignore the aux or composite camera torch status update
              * if the package name does not falls in this bucket
              */
-            boolean exposeMonoCamera = false;
-            String packageName = ActivityThread.currentOpPackageName();
-            String packageList = SystemProperties.get("vendor.camera.aux.packagelist");
-            if (packageList.length() > 0) {
-                TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-                splitter.setString(packageList);
-                for (String str : splitter) {
-                    if (packageName.equals(str)) {
-                        exposeMonoCamera = true;
-                        break;
-                    }
-                }
-            }
-
-            if (exposeMonoCamera == false) {
-                if (Integer.parseInt(id) >= 2) {
-                    Log.w(TAG, "ignore the torch status update of camera: " + id);
-                    return;
-                }
+            boolean exposeAuxCamera = Camera.shouldExposeAuxCamera();
+            if (!exposeAuxCamera == false && Integer.parseInt(id) >= 2) {
+                Log.w(TAG, "ignore the torch status update of camera: " + id);
+                return;
             }
 
             if (!validTorchStatus(status)) {
@@ -1487,6 +1482,32 @@ public final class CameraManager {
                     final AvailabilityCallback callback = mCallbackMap.keyAt(i);
 
                     postSingleAccessPriorityChangeUpdate(callback, executor);
+                }
+            }
+        }
+
+        @Override
+        public void onCameraOpened(String cameraId, String clientPackageId) {
+            synchronized (mLock) {
+                final int callbackCount = mCallbackMap.size();
+                for (int i = 0; i < callbackCount; i++) {
+                    Executor executor = mCallbackMap.valueAt(i);
+                    final AvailabilityCallback callback = mCallbackMap.keyAt(i);
+
+                    postSingleCameraOpenedUpdate(callback, executor, cameraId, clientPackageId);
+                }
+            }
+        }
+
+        @Override
+        public void onCameraClosed(String cameraId) {
+            synchronized (mLock) {
+                final int callbackCount = mCallbackMap.size();
+                for (int i = 0; i < callbackCount; i++) {
+                    Executor executor = mCallbackMap.valueAt(i);
+                    final AvailabilityCallback callback = mCallbackMap.keyAt(i);
+
+                    postSingleCameraClosedUpdate(callback, executor, cameraId);
                 }
             }
         }

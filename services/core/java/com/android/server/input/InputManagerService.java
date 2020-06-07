@@ -59,6 +59,7 @@ import android.os.MessageQueue;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.provider.DeviceConfig;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.text.TextUtils;
@@ -125,6 +126,9 @@ public class InputManagerService extends IInputManager.Stub
 
     private static final String EXCLUDED_DEVICES_PATH = "etc/excluded-input-devices.xml";
     private static final String PORT_ASSOCIATIONS_PATH = "etc/input-port-associations.xml";
+
+    // Feature flag name for the deep press feature
+    private static final String DEEP_PRESS_ENABLED = "deep_press_enabled";
 
     private static final int MSG_DELIVER_INPUT_DEVICES_CHANGED = 1;
     private static final int MSG_SWITCH_KEYBOARD_LAYOUT = 2;
@@ -223,6 +227,8 @@ public class InputManagerService extends IInputManager.Stub
     private static native void nativeSetFocusedApplication(long ptr,
             int displayId, InputApplicationHandle application);
     private static native void nativeSetFocusedDisplay(long ptr, int displayId);
+    private static native boolean nativeTransferTouchFocus(long ptr,
+            InputChannel fromChannel, InputChannel toChannel);
     private static native void nativeSetPointerSpeed(long ptr, int speed);
     private static native void nativeSetShowTouches(long ptr, boolean enabled);
     private static native void nativeSetSwapKeys(long ptr, boolean enabled);
@@ -243,6 +249,7 @@ public class InputManagerService extends IInputManager.Stub
     private static native void nativeSetCustomPointerIcon(long ptr, PointerIcon icon);
     private static native void nativeSetPointerCapture(long ptr, boolean detached);
     private static native boolean nativeCanDispatchToDisplay(long ptr, int deviceId, int displayId);
+    private static native void nativeSetMotionClassifierEnabled(long ptr, boolean enabled);
 
     // Input event injection constants defined in InputDispatcher.h.
     private static final int INPUT_EVENT_INJECTION_SUCCEEDED = 0;
@@ -349,6 +356,7 @@ public class InputManagerService extends IInputManager.Stub
         registerShowTouchesSettingObserver();
         registerAccessibilityLargePointerSettingObserver();
         registerSwapKeysSettingObserver();
+        registerLongPressTimeoutObserver();
 
         mContext.registerReceiver(new BroadcastReceiver() {
             @Override
@@ -357,6 +365,7 @@ public class InputManagerService extends IInputManager.Stub
                 updateShowTouchesFromSettings();
                 updateAccessibilityLargePointerFromSettings();
                 updateSwapKeysSettings();
+                updateDeepPressStatusFromSettings("user switched");
             }
         }, new IntentFilter(Intent.ACTION_USER_SWITCHED), null, mHandler);
 
@@ -364,6 +373,7 @@ public class InputManagerService extends IInputManager.Stub
         updateShowTouchesFromSettings();
         updateAccessibilityLargePointerFromSettings();
         updateSwapKeysSettings();
+        updateDeepPressStatusFromSettings("just booted");
     }
 
     // TODO(BT) Pass in parameter for bluetooth system
@@ -1540,6 +1550,29 @@ public class InputManagerService extends IInputManager.Stub
         nativeSetSystemUiVisibility(mPtr, visibility);
     }
 
+    /**
+     * Atomically transfers touch focus from one window to another as identified by
+     * their input channels.  It is possible for multiple windows to have
+     * touch focus if they support split touch dispatch
+     * {@link android.view.WindowManager.LayoutParams#FLAG_SPLIT_TOUCH} but this
+     * method only transfers touch focus of the specified window without affecting
+     * other windows that may also have touch focus at the same time.
+     * @param fromChannel The channel of a window that currently has touch focus.
+     * @param toChannel The channel of the window that should receive touch focus in
+     * place of the first.
+     * @return True if the transfer was successful.  False if the window with the
+     * specified channel did not actually have touch focus at the time of the request.
+     */
+    public boolean transferTouchFocus(InputChannel fromChannel, InputChannel toChannel) {
+        if (fromChannel == null) {
+            throw new IllegalArgumentException("fromChannel must not be null.");
+        }
+        if (toChannel == null) {
+            throw new IllegalArgumentException("toChannel must not be null.");
+        }
+        return nativeTransferTouchFocus(mPtr, fromChannel, toChannel);
+    }
+
     @Override // Binder call
     public void tryPointerSpeed(int speed) {
         if (!checkCallingPermission(android.Manifest.permission.SET_POINTER_SPEED,
@@ -1554,7 +1587,7 @@ public class InputManagerService extends IInputManager.Stub
         setPointerSpeedUnchecked(speed);
     }
 
-    public void updatePointerSpeedFromSettings() {
+    private void updatePointerSpeedFromSettings() {
         int speed = getPointerSpeedSetting();
         setPointerSpeedUnchecked(speed);
     }
@@ -1586,7 +1619,7 @@ public class InputManagerService extends IInputManager.Stub
         return speed;
     }
 
-    public void updateShowTouchesFromSettings() {
+    private void updateShowTouchesFromSettings() {
         int setting = getShowTouchesSetting(0);
         nativeSetShowTouches(mPtr, setting != 0);
     }
@@ -1602,7 +1635,7 @@ public class InputManagerService extends IInputManager.Stub
                 }, UserHandle.USER_ALL);
     }
 
-    public void updateAccessibilityLargePointerFromSettings() {
+    private void updateAccessibilityLargePointerFromSettings() {
         final int accessibilityConfig = Settings.Secure.getIntForUser(
                 mContext.getContentResolver(), Settings.Secure.ACCESSIBILITY_LARGE_POINTER_ICON,
                 0, UserHandle.USER_CURRENT);
@@ -1617,6 +1650,34 @@ public class InputManagerService extends IInputManager.Stub
                     @Override
                     public void onChange(boolean selfChange) {
                         updateAccessibilityLargePointerFromSettings();
+                    }
+                }, UserHandle.USER_ALL);
+    }
+
+    private void updateDeepPressStatusFromSettings(String reason) {
+        // Not using ViewConfiguration.getLongPressTimeout here because it may return a stale value
+        final int timeout = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+                Settings.Secure.LONG_PRESS_TIMEOUT, ViewConfiguration.DEFAULT_LONG_PRESS_TIMEOUT,
+                UserHandle.USER_CURRENT);
+        final boolean featureEnabledFlag =
+                DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_INPUT_NATIVE_BOOT,
+                        DEEP_PRESS_ENABLED, true /* default */);
+        final boolean enabled =
+                featureEnabledFlag && timeout <= ViewConfiguration.DEFAULT_LONG_PRESS_TIMEOUT;
+        Log.i(TAG,
+                (enabled ? "Enabling" : "Disabling") + " motion classifier because " + reason
+                + ": feature " + (featureEnabledFlag ? "enabled" : "disabled")
+                + ", long press timeout = " + timeout);
+        nativeSetMotionClassifierEnabled(mPtr, enabled);
+    }
+
+    private void registerLongPressTimeoutObserver() {
+        mContext.getContentResolver().registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.LONG_PRESS_TIMEOUT), true,
+                new ContentObserver(mHandler) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        updateDeepPressStatusFromSettings("timeout changed");
                     }
                 }, UserHandle.USER_ALL);
     }

@@ -272,4 +272,8 @@
 
     <!-- Daily data usage -->
     <string name="daily_data_usage_title">Today\'s usage</string>
+    <!-- FOD View -->
+    <string name="fod_view_title" translatable="false">Fingerprint on display</string>
+    <string name="fod_view_pressed_title" translatable="false">Fingerprint on display.touched</string>
+
 </resources>

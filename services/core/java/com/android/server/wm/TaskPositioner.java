@@ -50,6 +50,7 @@ import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.InputWindowHandle;
 import android.view.MotionEvent;
+import android.view.SurfaceControl;
 import android.view.WindowManager;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -307,7 +308,12 @@ class TaskPositioner implements IBinder.DeathRecipient {
         mDisplayContent.pauseRotationLocked();
 
         // Notify InputMonitor to take mDragWindowHandle.
-        mDisplayContent.getInputMonitor().updateInputWindowsLw(true /*force*/);
+        // We must add mDragWindowHandle to InputManager immediately although
+        // there is pending for updateInputWindows. Otherwise, the
+        // InputManager.transferTouchFocus will fail because of not-found
+        // mDragWindowHandle(to window).
+        mDisplayContent.getInputMonitor().updateInputWindowsImmediately(true);
+        new SurfaceControl.Transaction().syncInputWindows().apply();
 
         mSideMargin = dipToPixel(SIDE_MARGIN_DIP, mDisplayMetrics);
         mMinVisibleWidth = dipToPixel(MINIMUM_VISIBLE_WIDTH_IN_DP, mDisplayMetrics);
@@ -349,7 +355,9 @@ class TaskPositioner implements IBinder.DeathRecipient {
         }
         mDisplayContent.resumeRotationLocked();
         mDisplayContent = null;
-        mClientCallback.unlinkToDeath(this, 0 /* flags */);
+        if (mClientCallback != null) {
+            mClientCallback.unlinkToDeath(this, 0 /* flags */);
+        }
     }
 
     void startDrag(WindowState win, boolean resize, boolean preserveOrientation, float startX,

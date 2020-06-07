@@ -22,6 +22,7 @@ LOCAL_REQUIRED_MODULES := \
 	DisplayCutoutEmulationTallOverlay \
 	FontAclonicaSourceOverlay \
 	FontAmaranteSourceOverlay \
+	FontArbutusSourceOverlay \
 	FontArvoLatoOverlay \
 	FontGoogleSansOverlay \
 	FontCagliostroSourceOverlay \
@@ -65,18 +66,17 @@ LOCAL_REQUIRED_MODULES := \
 	FontGrandHotelSourceOverlay \
 	FontRedressedSourceOverlay \
 	IconPackCircularAndroidOverlay \
-	IconPackCircularPixelLauncherOverlay \
-	IconPackCircularPixelThemePickerOverlay \
+	IconPackCircularLauncherOverlay \
 	IconPackCircularSettingsOverlay \
 	IconPackCircularSystemUIOverlay \
+	IconPackCircularThemePickerOverlay \
 	IconPackFilledAndroidOverlay \
-	IconPackFilledPixelLauncherOverlay \
-	IconPackFilledPixelThemePickerOverlay \
+	IconPackFilledLauncherOverlay \
 	IconPackFilledSettingsOverlay \
 	IconPackFilledSystemUIOverlay \
+	IconPackFilledThemePickerOverlay \
 	IconPackRoundedAndroidOverlay \
-	IconPackRoundedPixelLauncherOverlay \
-	IconPackRoundedPixelThemePickerOverlay \
+	IconPackRoundedLauncherOverlay \
 	IconPackRoundedSettingsOverlay \
 	IconPackRoundedSystemUIOverlay \
 	IconShapeCylinderOverlay \
@@ -86,6 +86,8 @@ LOCAL_REQUIRED_MODULES := \
 	IconShapeAncient4Overlay \
         IconShapeAncient5Overlay \
         IconShapeAncient6Overlay \
+	IconPackRoundedThemePickerOverlay \
+	IconShapeRoundedHexagonOverlay \
 	IconShapeRoundedRectOverlay \
 	IconShapeSquareOverlay \
 	IconShapeSquircleOverlay \
