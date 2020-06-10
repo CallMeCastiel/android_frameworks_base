@@ -61,7 +61,6 @@ import android.widget.TextView;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.internal.config.sysui.SystemUiDeviceConfigFlags;
-import com.android.internal.util.havoc.Utils;
 import com.android.settingslib.Utils;
 import com.android.systemui.BatteryMeterView;
 import com.android.systemui.DualToneHandler;
@@ -122,6 +121,7 @@ public class QuickStatusBarHeader extends RelativeLayout implements
     private View mDataUsageLayout;
     private ImageView mDataUsageImage;
     private DataUsageView mDataUsageView;
+    com.android.internal.util.havoc.Utils havocUtils;
 
     private boolean mExpanded;
     private boolean mListening;
@@ -483,7 +483,7 @@ public class QuickStatusBarHeader extends RelativeLayout implements
 
     private void updateDataUsageView() {
         if (mDataUsageView.isDataUsageEnabled() != 0) {
-            if (Utils.isConnected(mContext)) {
+            if (havocUtils.isConnected(mContext)) {
                 DataUsageView.updateUsage();
                 mDataUsageLayout.setVisibility(View.VISIBLE);
                 mDataUsageImage.setVisibility(View.VISIBLE);
