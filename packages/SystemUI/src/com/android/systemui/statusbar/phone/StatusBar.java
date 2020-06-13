@@ -4855,6 +4855,7 @@ public class StatusBar extends SystemUI implements DemoMode,
             updateTicker();
             updateQSPanel();
        }
+    }
 
     private void setScreenBrightnessMode() {
         int mode = Settings.System.getIntForUser(mContext.getContentResolver(),
