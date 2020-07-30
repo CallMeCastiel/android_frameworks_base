@@ -180,6 +180,9 @@ interface IAudioService {
 
     void handleBluetoothA2dpDeviceConfigChange(in BluetoothDevice device);
 
+    void handleBluetoothA2dpActiveDeviceChange(in BluetoothDevice device,
+            int state, int profile, boolean suppressNoisyIntent, int a2dpVolume);
+
     @UnsupportedAppUsage
     AudioRoutesInfo startWatchingRoutes(in IAudioRoutesObserver observer);
 
@@ -264,6 +267,17 @@ interface IAudioService {
     int setAllowedCapturePolicy(in int capturePolicy);
 
     int getAllowedCapturePolicy();
+
+    /**
+     * Internal api to protect Pulse
+     * @hide
+     */
+    void setVisualizerLocked(boolean doLock);
+
+    /**
+     * @hide
+     */
+    boolean isVisualizerLocked(String callingPackage);
 
     // WARNING: read warning at top of file, new methods that need to be used by native
     // code via IAudioManager.h need to be added to the top section.

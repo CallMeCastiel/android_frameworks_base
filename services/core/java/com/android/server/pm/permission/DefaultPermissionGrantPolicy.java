@@ -198,6 +198,12 @@ public final class DefaultPermissionGrantPolicy {
         SUSPEND_APP_PERMISSIONS.add(Manifest.permission.SUSPEND_APPS);
     }
 
+    private static final Set<String> PULSE_EQ_PERMISSIONS = new ArraySet<>();
+    static {
+        PULSE_EQ_PERMISSIONS.add(Manifest.permission.MODIFY_AUDIO_SETTINGS);
+        PULSE_EQ_PERMISSIONS.add(Manifest.permission.RECORD_AUDIO);
+    }
+
     private static final int MSG_READ_DEFAULT_PERMISSION_EXCEPTIONS = 1;
 
     private static final String ACTION_TRACK = "com.android.fitness.TRACK";
@@ -601,16 +607,16 @@ public final class DefaultPermissionGrantPolicy {
                 userId, CONTACTS_PERMISSIONS, CALENDAR_PERMISSIONS);
 
         // Browser
-        String browserPackage = getKnownPackage(PackageManagerInternal.PACKAGE_BROWSER, userId);
+        /*String browserPackage = getKnownPackage(PackageManagerInternal.PACKAGE_BROWSER, userId);
         if (browserPackage == null) {
             browserPackage = getDefaultSystemHandlerActivityPackageForCategory(
                     Intent.CATEGORY_APP_BROWSER, userId);
             if (!isSystemPackage(browserPackage)) {
                 browserPackage = null;
             }
-        }
-        grantPermissionsToPackage(browserPackage, userId, false /* ignoreSystemPackage */,
-                true /*whitelistRestrictedPermissions*/, ALWAYS_LOCATION_PERMISSIONS);
+        }*/
+        //grantPermissionsToPackage(browserPackage, userId, false /* ignoreSystemPackage */,
+        //        true /*whitelistRestrictedPermissions*/, ALWAYS_LOCATION_PERMISSIONS);
 
         // Wellbeing
         String WellbeingPackageName = "com.google.android.apps.wellbeing";
@@ -825,6 +831,9 @@ public final class DefaultPermissionGrantPolicy {
 
         // Google Markup
         grantSystemFixedPermissionsToSystemPackage("com.google.android.markup", userId, STORAGE_PERMISSIONS);
+
+        // SystemUI Pulse EQ
+        grantSystemFixedPermissionsToSystemPackage("com.android.systemui", userId, PULSE_EQ_PERMISSIONS);
     }
 
     private String getDefaultSystemHandlerActivityPackageForCategory(String category, int userId) {
@@ -965,8 +974,8 @@ public final class DefaultPermissionGrantPolicy {
     }
 
     public void grantDefaultPermissionsToDefaultBrowser(String packageName, int userId) {
-        Log.i(TAG, "Granting permissions to default browser for user:" + userId);
-        grantPermissionsToSystemPackage(packageName, userId, ALWAYS_LOCATION_PERMISSIONS);
+        //Log.i(TAG, "Granting permissions to default browser for user:" + userId);
+        //grantPermissionsToSystemPackage(packageName, userId, ALWAYS_LOCATION_PERMISSIONS);
     }
 
     private String getDefaultSystemHandlerActivityPackage(String intentAction, int userId) {

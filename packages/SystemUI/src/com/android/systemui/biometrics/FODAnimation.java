@@ -26,8 +26,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import com.android.keyguard.KeyguardUpdateMonitor;
-import com.android.keyguard.KeyguardUpdateMonitorCallback;
 import com.android.systemui.R;
 
 public class FODAnimation extends ImageView {
@@ -41,36 +39,13 @@ public class FODAnimation extends ImageView {
     private int mAnimationPositionY;
     private AnimationDrawable recognizingAnim;
     private WindowManager mWindowManager;
-    private boolean mIsDreaming;
-    private boolean mIsPulsing;
     private boolean mIsKeyguard;
-
-    private KeyguardUpdateMonitor mUpdateMonitor;
-
-    private KeyguardUpdateMonitorCallback mMonitorCallback = new KeyguardUpdateMonitorCallback() {
-        @Override
-        public void onDreamingStateChanged(boolean dreaming) {
-            mIsDreaming = dreaming;
-        }
-
-        @Override
-        public void onPulsing(boolean pulsing) {
-            super.onPulsing(pulsing);
-            mIsPulsing = pulsing;
-	        if (mIsPulsing) {
-                mIsDreaming = false;
-            }
-	    }
-    };
 
     public FODAnimation(Context context, int mPositionX, int mPositionY) {
         super(context);
 
         mContext = context;
         mWindowManager = mContext.getSystemService(WindowManager.class);
-
-        mUpdateMonitor = KeyguardUpdateMonitor.getInstance(context);
-        mUpdateMonitor.registerCallback(mMonitorCallback);
 
         mAnimationSize = mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_size);
         mAnimationOffset = mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_offset);
@@ -89,8 +64,8 @@ public class FODAnimation extends ImageView {
         recognizingAnim = (AnimationDrawable) getBackground();
     }
 
-    public void updateParams(int mDreamingOffsetY) {
-        mAnimParams.y = mDreamingOffsetY - (mAnimationSize / 2) + mAnimationOffset;
+    public void updateParams(int positionY) {
+        mAnimParams.y = positionY - (mAnimationSize / 2) + mAnimationOffset;
     }
 
     public void setAnimationKeyguard(boolean state) {
@@ -98,7 +73,7 @@ public class FODAnimation extends ImageView {
     }
 
     public void showFODanimation() {
-        if (mAnimParams != null && !mShowing && mIsKeyguard && !mIsDreaming) {
+        if (mAnimParams != null && !mShowing && mIsKeyguard) {
             mShowing = true;
             if (this.getWindowToken() == null) {
                 mWindowManager.addView(this, mAnimParams);

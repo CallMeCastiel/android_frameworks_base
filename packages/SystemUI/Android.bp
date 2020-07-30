@@ -35,6 +35,15 @@ android_library {
         "src/**/*.kt",
         "src/**/*.java",
         "src/**/I*.aidl",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/ColorAnimator.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/FadingBlockRenderer.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/FFTAverage.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/PulseControllerImpl.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/PulseView.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/Renderer.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/SolidLineRenderer.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/VisualizerStreamHandler.java",
+        "../../../../external/pulse/src/com/android/systemui/navigation/pulse/ColorController.java",
     ],
     resource_dirs: [
         "res-keyguard",
@@ -66,7 +75,6 @@ android_library {
         "dagger2-2.19",
         "jsr330",
         "vendor.lineage.biometrics.fingerprint.inscreen-V1.0-java",
-        "vendor.lineage.biometrics.fingerprint.inscreen-V1.1-java",
         "VendorSupport-preference"
     ],
     manifest: "AndroidManifest.xml",
@@ -126,7 +134,6 @@ android_library {
         "dagger2-2.19",
         "jsr330",
         "vendor.lineage.biometrics.fingerprint.inscreen-V1.0-java",
-        "vendor.lineage.biometrics.fingerprint.inscreen-V1.1-java",
     ],
     libs: [
         "android.test.runner",

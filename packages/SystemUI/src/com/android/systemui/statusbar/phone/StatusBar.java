@@ -271,12 +271,14 @@ import com.android.systemui.statusbar.policy.KeyguardMonitor;
 import com.android.systemui.statusbar.policy.KeyguardUserSwitcher;
 import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.OnHeadsUpChangedListener;
+import com.android.systemui.statusbar.policy.PulseController;
 import com.android.systemui.statusbar.policy.RemoteInputQuickSettingsDisabler;
 import com.android.systemui.statusbar.policy.UserInfoController;
 import com.android.systemui.statusbar.policy.UserInfoControllerImpl;
 import com.android.systemui.statusbar.policy.UserSwitcherController;
 import com.android.systemui.statusbar.policy.ZenModeController;
 import com.android.systemui.util.InjectionInflationController;
+import com.android.systemui.util.leak.RotationUtils;
 import com.android.systemui.volume.VolumeComponent;
 
 import com.google.android.systemui.keyguard.KeyguardSliceProviderGoogle;
@@ -698,6 +700,10 @@ public class StatusBar extends SystemUI implements DemoMode,
     @VisibleForTesting
     protected WakefulnessLifecycle mWakefulnessLifecycle;
 
+    private int mImmerseMode;
+    private boolean mStockStatusBar = true;
+    private boolean mPortrait = true;
+
     private final View.OnClickListener mGoToLockedShadeListener = v -> {
         if (mState == StatusBarState.KEYGUARD) {
             wakeUpIfDozing(SystemClock.uptimeMillis(), v, "SHADE_CLICK");
@@ -950,6 +956,9 @@ public class StatusBar extends SystemUI implements DemoMode,
         mDefaultHome = getCurrentDefaultHome();
         mContext.registerReceiver(mDefaultHomeBroadcastReceiver, mDefaultHomeIntentFilter);
         ActivityManagerWrapper.getInstance().registerTaskStackListener(mTaskStackChangeListener);
+
+        // this will initialize Pulse and begin listening for media events
+        mMediaManager.addCallback(Dependency.get(PulseController.class));
     }
 
     // ================================================================================
@@ -1019,7 +1028,6 @@ public class StatusBar extends SystemUI implements DemoMode,
                     if (mHeadsUpManager.hasPinnedHeadsUp()) {
                         mNotificationPanel.notifyBarPanelExpansionChanged();
                     }
-                    handleCutout(null);
                     mStatusBarView.setBouncerShowing(mBouncerShowing);
                     if (oldStatusBarView != null) {
                         float fraction = oldStatusBarView.getExpansionFraction();
@@ -1044,6 +1052,7 @@ public class StatusBar extends SystemUI implements DemoMode,
                         new BurnInProtectionController(mContext, this, mStatusBarView);
                     mStatusBarContent = (LinearLayout) mStatusBarView.findViewById(R.id.status_bar_contents);
                     mCenterClockLayout = mStatusBarView.findViewById(R.id.center_clock_layout);
+                    handleCutout();
                 }).getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.status_bar_container, new CollapsedStatusBarFragment(),
@@ -3500,13 +3509,16 @@ public class StatusBar extends SystemUI implements DemoMode,
         updateResources();
         updateDisplaySize(); // populates mDisplayMetrics
 
-        if (DEBUG) {
-            Log.v(TAG, "configuration changed: " + mContext.getResources().getConfiguration());
-        }
+        mPortrait = RotationUtils.getExactRotation(mContext) == RotationUtils.ROTATION_NONE;
 
         mViewHierarchyManager.updateRowStates();
         mScreenPinningRequest.onConfigurationChanged();
-        handleCutout(newConfig);
+
+        if (mImmerseMode == 1) {
+            mUiOffloadThread.submit(() -> {
+                setBlackStatusBar(mPortrait);
+            });
+        }
 
         if (blurperformed) {
             mNotificationPanel.setPanelAlpha(0, false);
@@ -4826,6 +4838,7 @@ public class StatusBar extends SystemUI implements DemoMode,
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QS_HEADER_STYLE),
+                    Settings.System.QS_TILE_ACCENT_TINT),
                     false, this, UserHandle.USER_ALL);
         }
 
@@ -4846,6 +4859,11 @@ public class StatusBar extends SystemUI implements DemoMode,
             } else if (uri.equals(Settings.System.getUriFor(Settings.System.QS_HEADER_STYLE))) {
                 stockQSHeaderStyle();
                 updateQSHeaderStyle();
+            if (uri.equals(Settings.System.getUriFor(Settings.System.DISPLAY_CUTOUT_MODE)) ||
+                    uri.equals(Settings.System.getUriFor(Settings.System.STOCK_STATUSBAR_IN_HIDE))) {
+                handleCutout();
+            } else if (uri.equals(Settings.System.getUriFor(Settings.System.QS_TILE_ACCENT_TINT))) {
+                mQSPanel.getHost().reloadAllTiles();
             }
             update();
         }
@@ -4871,7 +4889,6 @@ public class StatusBar extends SystemUI implements DemoMode,
             updateAODDimView();
             setMediaHeadsup();
             setQsBatteryPercentMode();
-            handleCutout(null);
             updateTicker();
             stockQSHeaderStyle();
             updateQSHeaderStyle();
@@ -5009,21 +5026,18 @@ public class StatusBar extends SystemUI implements DemoMode,
         }
     }
 
-    private void handleCutout(Configuration newConfig) {
-        boolean immerseMode;
-        if (newConfig == null || newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            immerseMode = Settings.System.getIntForUser(mContext.getContentResolver(),
-                        Settings.System.DISPLAY_CUTOUT_MODE, 0, UserHandle.USER_CURRENT) == 1;
-        } else {
-            immerseMode = false;
-        }
-        final boolean hideCutoutMode = Settings.System.getIntForUser(mContext.getContentResolver(),
-                        Settings.System.DISPLAY_CUTOUT_MODE, 0, UserHandle.USER_CURRENT) == 2;
-        final boolean statusBarStock = Settings.System.getIntForUser(mContext.getContentResolver(),
+    private void handleCutout() {
+        mImmerseMode = Settings.System.getIntForUser(mContext.getContentResolver(),
+                        Settings.System.DISPLAY_CUTOUT_MODE, 0, UserHandle.USER_CURRENT);
+        mStockStatusBar = Settings.System.getIntForUser(mContext.getContentResolver(),
                         Settings.System.STOCK_STATUSBAR_IN_HIDE, 1, UserHandle.USER_CURRENT) == 1;
-        setBlackStatusBar(immerseMode);
-        setCutoutOverlay(hideCutoutMode);
-        setStatusBarStockOverlay(hideCutoutMode && statusBarStock);
+        final boolean immerseMode = mImmerseMode == 1;
+        final boolean hideCutoutMode = mImmerseMode == 2;
+        mUiOffloadThread.submit(() -> {
+            setBlackStatusBar(mPortrait && immerseMode);
+            setCutoutOverlay(hideCutoutMode);
+            setStatusBarStockOverlay(hideCutoutMode && mStockStatusBar);
+        });
     }
 
     public int getWakefulnessState() {

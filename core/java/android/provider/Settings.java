@@ -4061,6 +4061,95 @@ public final class Settings {
         };
 
         /**
+         * Pulse navbar music visualizer
+         *
+         * @hide
+         */
+        public static final String PULSE_ENABLED = "navbar_pulse_enabled";
+
+        /**
+         * Pulse navbar music visualizer color type
+         *
+         * @hide
+         */
+        public static final String PULSE_COLOR_TYPE = "navbar_pulse_color_type";
+
+        /**
+         * Pulse music visualizer user defined color
+         *
+         * @hide
+         */
+        public static final String PULSE_COLOR_USER = "navbar_pulse_color_user";
+
+        /**
+         * Pulse lavalamp animation speed
+         *
+         * @hide
+         */
+        public static final String PULSE_LAVALAMP_SPEED = "navbar_pulse_lavalamp_speed";
+
+        /**
+         * Pulse renderer implementation
+         *
+         * @hide
+         */
+        public static final String PULSE_RENDER_STYLE_URI = "navbar_pulse_render_style";
+
+        /**
+         * Custom Pulse Widths
+         * @hide
+         */
+        public static final String PULSE_CUSTOM_DIMEN = "pulse_custom_dimen";
+
+        /**
+         * Custom Spacing Between Pulse Bars
+         * @hide
+         */
+        public static final String PULSE_CUSTOM_DIV = "pulse_custom_div";
+
+        /**
+         * Custom Pulse Block Size
+         * @hide
+         */
+        public static final String PULSE_FILLED_BLOCK_SIZE = "pulse_filled_block_size";
+
+        /**
+         * Custom Spacing Between Pulse Blocks
+         * @hide
+         */
+        public static final String PULSE_EMPTY_BLOCK_SIZE = "pulse_empty_block_size";
+
+        /**
+         * Custom Pulse Sanity Levels
+         * @hide
+         */
+        public static final String PULSE_CUSTOM_FUDGE_FACTOR = "pulse_custom_fudge_factor";
+
+        /**
+         * Pulse Fudge Factor
+         * @hide
+         */
+        public static final String PULSE_SOLID_FUDGE_FACTOR = "pulse_solid_fudge_factor";
+
+        /**
+         * Pulse Solid units count
+         * @hide
+         */
+        public static final String PULSE_SOLID_UNITS_COUNT = "pulse_solid_units_count";
+
+        /**
+         * Pulse Solid units opacity
+         * @hide
+         */
+        public static final String PULSE_SOLID_UNITS_OPACITY = "pulse_solid_units_opacity";
+
+        /**
+         * Pulse uses FFT averaging
+         * @hide
+         */
+        public static final String PULSE_SMOOTHING_ENABLED = "pulse_smoothing_enabled";
+
+        /**
          * Whether the setup wizard has been run before (on first boot), or if
          * it still needs to be run.
          *
@@ -4715,6 +4804,12 @@ public final class Settings {
          * @hide
          */
         public static final String CUSTOM_AMBIENT_TILT_GESTURE = "custom_ambient_tilt_gesture";
+
+        /**
+         * Custom Ambient raise gesture
+         * @hide
+         */
+        public static final String CUSTOM_AMBIENT_RAISE_GESTURE = "custom_ambient_raise_gesture";
 
         /**
          * Custom Ambient handwave gesture
@@ -5648,12 +5743,6 @@ public final class Settings {
         private static final Validator STATUS_BAR_FILE_HEADER_IMAGE_VALIDATOR = ANY_STRING_VALIDATOR;
 
         /**
-         * Whether to display 4G icon instead LTE
-         * @hide
-         */
-        public static final String SHOW_HD_ICON = "show_hd_icon";
-
-        /**
          * @hide
          */
         public static final String ASPECT_RATIO_APPS_LIST = "aspect_ratio_apps_list";
@@ -5755,6 +5844,13 @@ public final class Settings {
 
         /** @hide */
         private static final Validator DOZE_BRIGHTNESS_VALIDATOR = ANY_INTEGER_VALIDATOR;
+
+        /**
+         * @hide
+         */
+        public static final String DOZE_BRIGHTNESS_FORCE = "doze_brightness_force";
+
+        private static final Validator DOZE_BRIGHTNESS_FORCE_VALIDATOR = BOOLEAN_VALIDATOR;
 
         /**
          * Whether to blink flashlight for incoming calls
@@ -5905,6 +6001,16 @@ public final class Settings {
         public static final String AMBIENT_LIGHT_PULSE_FOR_ALL = "ambient_light_pulse_for_all";
 
         private static final Validator AMBIENT_LIGHT_PULSE_FOR_ALL_VALIDATOR = ANY_INTEGER_VALIDATOR;
+
+        /**
+         * Direction of repeat animations of Ambient edge light
+         * 0 is restart
+         * 1 is reverse
+         * @hide
+         */
+        public static final String AMBIENT_LIGHT_REPEAT_DIRECTION = "ambient_light_repeat_direction";
+
+        private static final Validator AMBIENT_LIGHT_REPEAT_DIRECTION_VALIDATOR = BOOLEAN_VALIDATOR;
 
         /**
          * helper setting to contain the current pulse reason so we can check
@@ -6481,6 +6587,13 @@ public final class Settings {
         public static final String SENSOR_BLOCK = "sensor_block";
 
         /**
+         * Sensor blocked packages
+         * @hide
+         */
+        public static final String SENSOR_BLOCKED_APP = "sensor_blocked_app";
+        public static final String SENSOR_BLOCKED_APP_DUMMY = "sensor_blocked_app_dummy";
+
+        /**
          * Whether to show the battery bar
          * @hide
          */
@@ -6656,6 +6769,84 @@ public final class Settings {
          * @hide
          */
         public static final String QS_HEADER_STYLE = "qs_header_style";
+        
+	/** 
+	 * Ambient Edge Light Layout
+         * @hide
+         */
+        public static final String AMBIENT_LIGHT_LAYOUT = "ambient_light_layout";
+
+        /**
+         * Whether touch hovering is enabled on supported hardware
+         * @hide
+         */
+        public static final String FEATURE_TOUCH_HOVERING = "feature_touch_hovering";
+
+        /** @hide */
+        private static final Validator FEATURE_TOUCH_HOVERING_VALIDATOR =
+                BOOLEAN_VALIDATOR;
+
+        /**
+         * Whether the HighTouchSensitivity is activated or not.
+         * 0 = off, 1 = on
+         */
+        public static final String HIGH_TOUCH_SENSITIVITY_ENABLE =
+                "high_touch_sensitivity_enable";
+
+        /** @hide */
+        private static final Validator HIGH_TOUCH_SENSITIVITY_ENABLE_VALIDATOR =
+                BOOLEAN_VALIDATOR;
+
+        /**
+         * Data usage period
+         * 0: Daily
+         * 1: Monthly
+         * @hide
+         */
+        public static final String DATA_USAGE_PERIOD = "data_usage_period";
+
+        /**
+         * Whether to tint the QS tiles with accent color
+         * @hide
+         */
+        public static final String QS_TILE_ACCENT_TINT = "qs_tile_accent_tint";
+
+        /**
+         * @hide
+         */
+        public static final String QS_HEADER_BACKGROUND = "qs_header_background";
+
+        /**
+         * Show the pending notification counts as overlays on the status bar
+         * @hide
+         */
+        public static final String STATUS_BAR_NOTIF_COUNT = "status_bar_notif_count";
+
+        /**
+         * Whether to show dashboard conditions in Settings
+         * @hide
+         */
+        public static final String SETTINGS_SHOW_CONDITIONS = "settings_show_conditions";
+
+        /**
+         * The amount of time in milliseconds before the device goes to sleep or begins
+         * to dream after a period of inactivity in the keyguard.
+         * @hide
+         */
+        public static final String LOCKSCREEN_TIMEOUT = "lockscreen_timeout";
+
+        /**
+         * Whether to show dashboard suggestions in Settings
+         * @hide
+         */
+        public static final String SETTINGS_SHOW_SUGGESTIONS = "settings_show_suggestions";
+
+        /**
+         * Toggle for clipboard access toast.
+         * @hide
+         */
+
+        public static final String SHOW_CLIPBOARD_TOAST = "show_clipboard_toast";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
@@ -6727,6 +6918,7 @@ public final class Settings {
             AMBIENT_LIGHT_DURATION,
             AMBIENT_LIGHT_REPEAT_COUNT,
             AMBIENT_LIGHT_PULSE_FOR_ALL,
+            AMBIENT_LIGHT_REPEAT_DIRECTION,
             NOTIFICATION_LIGHT_PULSE,
             ANBI_ENABLED_OPTION,
             VOLUME_ROCKER_WAKE,
@@ -6783,6 +6975,7 @@ public final class Settings {
             USE_OLD_MOBILETYPE,
             PULSE_BRIGHTNESS,
             DOZE_BRIGHTNESS,
+            DOZE_BRIGHTNESS_FORCE,
             FLASHLIGHT_ON_CALL,
             BACK_GESTURE_HAPTIC,
             QS_BACKGROUND_BLUR,
@@ -6995,6 +7188,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(USE_OLD_MOBILETYPE);
             PRIVATE_SETTINGS.add(PULSE_BRIGHTNESS);
             PRIVATE_SETTINGS.add(DOZE_BRIGHTNESS);
+            PRIVATE_SETTINGS.add(DOZE_BRIGHTNESS_FORCE);
             PRIVATE_SETTINGS.add(FLASHLIGHT_ON_CALL);
             PRIVATE_SETTINGS.add(INCALL_FEEDBACK_VIBRATE);
             PRIVATE_SETTINGS.add(BACK_GESTURE_HAPTIC);
@@ -7004,6 +7198,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(AMBIENT_LIGHT_DURATION);
             PRIVATE_SETTINGS.add(AMBIENT_LIGHT_REPEAT_COUNT);
             PRIVATE_SETTINGS.add(AMBIENT_LIGHT_PULSE_FOR_ALL);
+            PRIVATE_SETTINGS.add(AMBIENT_LIGHT_REPEAT_DIRECTION);
             PRIVATE_SETTINGS.add(FORCE_SHOW_NAVBAR);
             PRIVATE_SETTINGS.add(NAVIGATION_BAR_ARROW_KEYS);
             PRIVATE_SETTINGS.add(KEY_HOME_LONG_PRESS_ACTION);
@@ -7036,6 +7231,8 @@ public final class Settings {
             PRIVATE_SETTINGS.add(QS_PANEL_BG_USE_ACCENT);
             PRIVATE_SETTINGS.add(QS_PANEL_BG_USE_NEW_TINT);
             PRIVATE_SETTINGS.add(QS_HEADER_STYLE);
+            PRIVATE_SETTINGS.add(FEATURE_TOUCH_HOVERING);
+            PRIVATE_SETTINGS.add(HIGH_TOUCH_SENSITIVITY_ENABLE);
         }
 
         /**
@@ -7134,6 +7331,7 @@ public final class Settings {
             VALIDATORS.put(AMBIENT_LIGHT_DURATION, AMBIENT_LIGHT_DURATION_VALIDATOR);
             VALIDATORS.put(AMBIENT_LIGHT_REPEAT_COUNT, AMBIENT_LIGHT_REPEAT_COUNT_VALIDATOR);
             VALIDATORS.put(AMBIENT_LIGHT_PULSE_FOR_ALL, AMBIENT_LIGHT_PULSE_FOR_ALL_VALIDATOR);
+            VALIDATORS.put(AMBIENT_LIGHT_REPEAT_DIRECTION, AMBIENT_LIGHT_REPEAT_DIRECTION_VALIDATOR);
             VALIDATORS.put(NOTIFICATION_LIGHT_PULSE, BOOLEAN_VALIDATOR);
             VALIDATORS.put(DISPLAY_TEMPERATURE_DAY, DISPLAY_TEMPERATURE_DAY_VALIDATOR);
             VALIDATORS.put(DISPLAY_TEMPERATURE_NIGHT, DISPLAY_TEMPERATURE_NIGHT_VALIDATOR);
@@ -7204,6 +7402,7 @@ public final class Settings {
             VALIDATORS.put(USE_OLD_MOBILETYPE, USE_OLD_MOBILETYPE_VALIDATOR);
             VALIDATORS.put(PULSE_BRIGHTNESS, PULSE_BRIGHTNESS_VALIDATOR);
             VALIDATORS.put(DOZE_BRIGHTNESS, DOZE_BRIGHTNESS_VALIDATOR);
+            VALIDATORS.put(DOZE_BRIGHTNESS_FORCE, DOZE_BRIGHTNESS_FORCE_VALIDATOR);
             VALIDATORS.put(FLASHLIGHT_ON_CALL, FLASHLIGHT_ON_CALL_VALIDATOR);
             VALIDATORS.put(INCALL_FEEDBACK_VIBRATE, INCALL_FEEDBACK_VIBRATE_VALIDATOR);
             VALIDATORS.put(BACK_GESTURE_HAPTIC, BACK_GESTURE_HAPTIC_VALIDATOR);
@@ -7236,6 +7435,8 @@ public final class Settings {
             VALIDATORS.put(QS_PANEL_BG_USE_FW, QS_PANEL_BG_USE_FW_VALIDATOR);
             VALIDATORS.put(QS_PANEL_BG_USE_ACCENT, QS_PANEL_BG_USE_ACCENT_VALIDATOR);
             VALIDATORS.put(QS_PANEL_BG_USE_NEW_TINT, QS_PANEL_BG_USE_NEW_TINT_VALIDATOR);
+            VALIDATORS.put(FEATURE_TOUCH_HOVERING, FEATURE_TOUCH_HOVERING_VALIDATOR);
+            VALIDATORS.put(HIGH_TOUCH_SENSITIVITY_ENABLE, HIGH_TOUCH_SENSITIVITY_ENABLE_VALIDATOR);
         }
 
         /**
@@ -16619,6 +16820,12 @@ public final class Settings {
          * @hide
          */
         public static final String LISTVIEW_INTERPOLATOR = "listview_interpolator";
+        
+	/** 
+	 * Audio focus mode for ringtones when headset is connected
+         * @hide
+         */
+        public static final String RINGTONE_FOCUS_MODE = "ringtone_focus_mode";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings

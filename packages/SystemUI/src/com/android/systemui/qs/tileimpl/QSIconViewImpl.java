@@ -28,6 +28,7 @@ import android.graphics.drawable.Animatable2.AnimationCallback;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
 import android.provider.Settings.System;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
@@ -187,6 +188,11 @@ public class QSIconViewImpl extends QSIconView {
                      System.QS_PANEL_BG_USE_NEW_TINT, 1, UserHandle.USER_CURRENT);
 
 	if (mAnimationEnabled && setQsFromResources && ValueAnimator.areAnimatorsEnabled()) {
+
+        boolean useQSAccentTint = Settings.System.getIntForUser(getContext().getContentResolver(),
+                Settings.System.QS_TILE_ACCENT_TINT, 0, UserHandle.USER_CURRENT) == 1;
+
+        if (mAnimationEnabled && ValueAnimator.areAnimatorsEnabled()) {
             final float fromAlpha = Color.alpha(fromColor);
             final float toAlpha = Color.alpha(toColor);
             final float fromChannel = Color.red(fromColor);
@@ -203,6 +209,10 @@ public class QSIconViewImpl extends QSIconView {
                     setTint(iv, Color.argb(alpha, channel, channel, channel));
                 } else {
                     setTint(iv, toColor);
+                if (useQSAccentTint) {
+                    setTint(iv, toColor);
+                } else {
+                    setTint(iv, Color.argb(alpha, channel, channel, channel));
                 }
             });
             anim.addListener(new AnimatorListenerAdapter() {

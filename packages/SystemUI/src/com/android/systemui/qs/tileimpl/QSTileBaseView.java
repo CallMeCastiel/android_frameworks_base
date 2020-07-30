@@ -77,6 +77,10 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
 
     private final ImageView backgroundView;
     private final ImageView foregroundView;
+    private final ImageView mBg;
+    private int mColorActive;
+    private int mColorActiveAlpha;
+    private final int mColorInactive;
     private final int mColorDisabled;
     private int mColorActive;
     private int mColorActiveAlpha;
@@ -183,6 +187,17 @@ public class QSTileBaseView extends com.android.systemui.plugins.qs.QSTileView {
         }
         setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         setBackground(mTileBackground);
+
+        mColorActive = Utils.getColorAttrDefaultColor(context, android.R.attr.colorAccent);
+        mColorActiveAlpha = adjustAlpha(mColorActive, 0.2f);
+        boolean useQSAccentTint = Settings.System.getIntForUser(context.getContentResolver(),
+                Settings.System.QS_TILE_ACCENT_TINT, 0, UserHandle.USER_CURRENT) == 1;
+        if (useQSAccentTint) {
+            mColorActive = mColorActiveAlpha;
+        }
+        mColorDisabled = Utils.getDisabled(context,
+                Utils.getColorAttrDefaultColor(context, android.R.attr.textColorTertiary));
+        mColorInactive = Utils.getColorAttrDefaultColor(context, android.R.attr.textColorSecondary);
 
         setPadding(0, 0, 0, 0);
         setClipChildren(false);

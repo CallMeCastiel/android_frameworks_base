@@ -34,11 +34,14 @@
 
     <!-- The default tiles to display in QuickSettings -->
     <string name="quick_settings_tiles_extra" translatable="false">
-        aod,adb_network,caffeine,compass,cpuinfo,fpsinfo,gaming,heads_up,hwkeys,livedisplay,music,navbar,reading_mode,reboot,screenrecord,screenshot,screenstabilization,smartpixels,sound,soundsearch,dataswitch,sync,usb_tether
+        aod,adb_network,caffeine,compass,cpuinfo,fpsinfo,gaming,heads_up,hwkeys,livedisplay,music,navbar,reading_mode,reboot,screenrecord,screenshot,screenstabilization,smartpixels,sound,soundsearch,dataswitch,sync,usb_tether,vpn
     </string>
 
     <!-- Color of the FOD view -->
     <color name="config_fodColor">#00ff00</color>
+
+    <!-- Whether to dim the FOD icon -->
+    <bool name="config_fodIconDim">false</bool>
 
     <!-- Max visible system icons -->
     <integer name="config_maxVisibleStatusIconContainer">7</integer>
@@ -71,9 +74,6 @@
 
     <!-- Show battery icon in the QS Panel instead of in the header -->
     <bool name="config_batteryInQSPanel">true</bool>
-
-    <!-- Whether to show VoLTE icon in the status bar -->
-    <bool name="config_display_volte">true</bool>
 
     <!-- Whether to use the mask for the quicksettings icons-->
     <bool name="config_useMaskForQs">true</bool>

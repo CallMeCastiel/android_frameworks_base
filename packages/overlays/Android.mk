@@ -65,6 +65,7 @@ LOCAL_REQUIRED_MODULES := \
 	FontQuandoSourceOverlay \
 	FontGrandHotelSourceOverlay \
 	FontRedressedSourceOverlay \
+	FontLinotteSourceOverlay \
 	IconPackCircularAndroidOverlay \
 	IconPackCircularLauncherOverlay \
 	IconPackCircularSettingsOverlay \
@@ -87,11 +88,15 @@ LOCAL_REQUIRED_MODULES := \
         IconShapeAncient5Overlay \
         IconShapeAncient6Overlay \
 	IconPackRoundedThemePickerOverlay \
+    IconShapeCylinderOverlay \
+    IconShapePebbleOverlay \
 	IconShapeRoundedHexagonOverlay \
 	IconShapeRoundedRectOverlay \
 	IconShapeSquareOverlay \
 	IconShapeSquircleOverlay \
+    IconShapeTaperedRectOverlay \
 	IconShapeTeardropOverlay \
+    IconShapeVesselOverlay \
 	NavigationBarMode3ButtonOverlay \
 	NavigationBarMode2ButtonOverlay \
 	NavigationBarModeGesturalOverlay \
